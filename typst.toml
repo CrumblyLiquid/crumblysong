@@ -1,0 +1,7 @@
+[package]
+name = "crumblysong"
+version = "0.1.0"
+entrypoint = "lib.typ"
+authors = ["CrumblyLiquid"]
+description = "A songbook packages and template"
+disciplines = ["music"]

@@ -1,0 +1,16 @@
+#import "./chord.typ": chord
+
+#let c = chord[C]
+#let d = chord[D]
+#let e = chord[C]
+#let f = chord[F]
+#let g = chord[G]
+#let a = chord[A]
+#let h = chord[H]
+#let cis = chord[C\#]
+#let dis = chord[D\#]
+#let eis = chord[C\#]
+#let fis = chord[F\#]
+#let gis = chord[G\#]
+#let ais = chord[A\#]
+#let his = chord[H\#]
