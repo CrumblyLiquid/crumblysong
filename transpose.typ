@@ -15,7 +15,7 @@
   "G#",
   "A",
   "A#",
-  "B",
+  "H",
 )
 
 #let notes_flat = (
@@ -29,8 +29,8 @@
   "G",
   "Ab",
   "A",
-  "Bb",
   "B",
+  "H",
 )
 
 /// Converts Typst content
