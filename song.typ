@@ -170,6 +170,7 @@
 /// - doc (content): Content of the song section
 /// -> content
 #let section(
+  ref: none,
   numbered: true,
   counter: none,
   numbering: "1.",
@@ -185,7 +186,7 @@
   },
   doc,
 ) = context {
-  if numbered {
+  if ref == none and numbered and counter != none {
     counter.step()
   }
 
@@ -225,8 +226,12 @@
       // Offset the label
       place(end, dy: offset, indicator_style({
         prefix
-        if counter != none and numbered {
-          counter.display(numbering)
+        if numbered and counter != none {
+          if ref != none {
+            std.numbering(numbering, ..counter.at(ref))
+          } else {
+            counter.display(numbering)
+          }
         }
         suffix
       }))
