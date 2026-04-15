@@ -1,6 +1,7 @@
 /// Song and song sections
 
 #import "transpose.typ": transpose_state
+#import "chord.typ": chord, i
 
 #let verse_counter = counter("verse")
 #let chorus_counter = counter("chorus")
@@ -155,11 +156,16 @@
 ///
 /// Section content refers to the actual lyrics with chords.
 ///
+/// - ref (label): Reference another section using its label
 /// - numbered (bool): Enable numbering
 /// - counter (any): Counter to use for numbering
 /// - numbering (str,function): Numbering formatting
 /// - prefix (content): Content before the numbering
 /// - suffix (content): Content after the numbering
+/// - ribbon (stroke): Stroke of the ribbon
+/// - ribbon_gutter (length): Space between the ribbon and the label
+/// - ribbon_outset (length): How much to stretch the ribbon past the
+///                           text's upper and lower limits
 /// - gutter (length): Space between section label
 ///                    and section content (the `doc` parameter)
 /// - spacing (length): Offset of the section label to account
@@ -173,10 +179,13 @@
   ref: none,
   numbered: true,
   counter: none,
-  numbering: "1.",
+  numbering: none,
   prefix: none,
   suffix: none,
-  gutter: .75em,
+  ribbon: none,
+  ribbon_gutter: 0.5em,
+  ribbon_outset: 0.35em,
+  gutter: 0.5em,
   spacing: 0.3em,
   indicator_style: doc => {
     text(weight: "bold", doc)
@@ -190,41 +199,44 @@
     counter.step()
   }
 
+  // Either use dictionary with
+  // additional properties or
+  // just the color
+  let ribbon_dict = if ribbon == none {
+    (paint: black.transparentize(100%))
+  } else if type(ribbon) == color {
+    (paint: ribbon)
+  } else {
+    ribbon
+  }
+
+  /// Whether the first line has any chords
+  /// and thereby the ribbon and the indicator
+  /// should be shortened/offset
+  /// -> bool
+  let first_line_chord = false
+
   // TODO: Maybe turn the lable part into a more generic
   // fuction parameter so prefix and suffix are not needed
   // (like rename and reuse the indicator_style
   //  and give it the counter parameter?)
   grid(
     columns: (auto, 1fr),
-    column-gutter: gutter,
+    column-gutter: gutter + ribbon_gutter,
     {
-      /// Offset by which the label should be shifted down
-      /// to match the baseline of the section content
-      /// when there's a chord on the first line
-      /// that shifts the content's baseline down
-      /// -> length
-      let offset = {
+      first_line_chord = {
         let chords = query(selector(<chord>).after(here()))
         if chords.len() == 0 {
-          0pt
+          false
         } else {
           let here_y = here().position().y
           let chord_y = chords.first().location().position().y
 
-          // No chords on the first line!
-          if here_y != chord_y {
-            0pt
-          } else {
-            // Chord is on the first line so we get it's height
-            // to know by how much to offset the part number
-            let chord_height = measure(chords.first()).height
-            chord_height.to-absolute() + spacing
-          }
+          here_y == chord_y
         }
       }
 
-      // Offset the label
-      place(end, dy: offset, indicator_style({
+      let indicator = indicator_style({
         prefix
         if numbered and counter != none {
           if ref != none {
@@ -234,48 +246,90 @@
           }
         }
         suffix
-      }))
+      })
+
+      let offset_indicator = if first_line_chord {
+        chord([~], indicator)
+      } else {
+        indicator
+      }
+
+      block(
+        outset: (y: ribbon_outset),
+        place(end, offset_indicator),
+      )
     },
-    text_style(doc),
+    {
+      let chord_height = measure([~]).height
+      block(
+        stroke: (
+          left: (
+            ..ribbon_dict,
+            thickness: 2pt,
+          ),
+        ),
+        outset: if first_line_chord {
+          // TODO: The `top` outset should be something
+          // like 0.3em - chord_height - chord_spaceing
+          (left: gutter, top: -chord_height, bottom: ribbon_outset)
+        } else {
+          (left: gutter, y: 0.3em)
+        },
+        text_style(doc),
+      )
+    },
   )
 }
 
 /// Verse section
-#let verse = section.with(counter: verse_counter)
+#let verse = section.with(
+  counter: verse_counter,
+  numbered: true,
+  numbering: "1",
+  prefix: none,
+  suffix: [.#h(0.01em)],
+  ribbon: (paint: gray),
+)
 
 /// Chorus section
 #let chorus = section.with(
   counter: chorus_counter,
   numbered: false,
-  prefix: [R:],
+  prefix: [R],
+  suffix: [:],
+  ribbon: (paint: navy),
 )
 
 /// Pre-chorus section
-#let prechorus = section.with(numbered: false, prefix: [P:])
+#let prechorus = section.with(
+  numbered: false,
+  prefix: [P],
+  suffix: [:],
+  ribbon: (paint: navy.lighten(50%)),
+)
 
 /// Bridge section
 #let bridge = section.with(
   counter: bridge_counter,
   numbered: false,
-  prefix: [B:],
+  prefix: [B],
+  suffix: [:],
+  ribbon: (paint: navy, dash: "dotted"),
 )
 
 /// Solo section
 ///
 /// It's usually used only for chords
 /// (without any lyrics)
-#let solo = section.with(numbered: false, prefix: [S:], text_style: doc => {
-  text(weight: "bold", doc)
-})
-
-// TODO: Deprecate Intro and use Solo instead
-// as they seem to convey the same meaning?
-
-/// Intro section
 ///
-/// It's usually used only for chords
-/// (without any lyrics)
-#let intro = section.with(numbered: false, prefix: [I:], text_style: doc => {
-  text(weight: "bold", doc)
-})
-
+/// Note: It automatically transposes
+///       anything that looks like a chord!
+#let solo = section.with(
+  numbered: false,
+  prefix: [S],
+  suffix: [:],
+  ribbon: (paint: gray.lighten(30%), dash: "dotted"),
+  text_style: doc => {
+    text(weight: "bold", i(doc))
+  },
+)

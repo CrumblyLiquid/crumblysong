@@ -146,6 +146,7 @@
 /// Create a chord
 ///
 /// - hidden (bool): Hide the chord
+/// - inline (bool): Place chords inline with the text
 /// - auto_spacing (bool): Leave space for previous chords
 /// - spacing (length):
 /// - spacer (content): The content between words if spacing is needed
@@ -153,6 +154,7 @@
 /// -> content
 #let chord(
   hidden: false,
+  inline: false,
   auto_spacing: true,
   spacing: 0.3em,
   spacer: none,
@@ -167,15 +169,20 @@
 
   let transposed_chord = transpose_automatic(chord)
 
-  if auto_spacing == true {
-    let chord_height = chord_height(transposed_chord, text, spacing)
-    adjust_chord_spacing(chord_height, spacer)
-  }
-
-  if text == none {
-    simple_chord(transposed_chord, spacing)
+  if inline {
+    transposed_chord
+    text
   } else {
-    stacked_chord(transposed_chord, text, spacing)
+    if auto_spacing == true {
+      let chord_height = chord_height(transposed_chord, text, spacing)
+      adjust_chord_spacing(chord_height, spacer)
+    }
+
+    if text == none {
+      simple_chord(transposed_chord, spacing)
+    } else {
+      stacked_chord(transposed_chord, text, spacing)
+    }
   }
 }
 
@@ -190,3 +197,7 @@
 /// Chord which inserts a dash as a spacer
 /// into the automatic spacing it creates
 #let w = chord.with(spacer: [-])
+/// Chord that is placed inline
+/// with the text
+/// (useful for solo chords, etc.)
+#let i = chord.with(inline: true)

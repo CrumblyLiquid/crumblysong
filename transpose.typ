@@ -93,7 +93,13 @@
 
   let transpose_part_amount = transpose_part.with(amount: amount)
   // Process each part of the chord separately
-  return chord_str.split("/").map(transpose_part_amount).join("/")
+
+  return chord_str
+    .split(" ")
+    .map(chord_part => {
+      chord_part.split("/").map(transpose_part_amount).join("/")
+    })
+    .join(" ")
 }
 
 /// Automatically transpose the chord

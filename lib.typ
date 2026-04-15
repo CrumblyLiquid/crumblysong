@@ -101,8 +101,7 @@
 /// the chords on the next line and this is a way to fix that.
 ///
 
-#import "./song.typ": (
-  bridge, chorus, intro, prechorus, section, solo, song, verse,
-)
-#import "./chord.typ": c, d, w
+#import "./song.typ": bridge, chorus, prechorus, section, solo, song, verse
+#import "./chord.typ": c, d, i, w
 #import "./transpose.typ": transpose_state
+#import "./repetition.typ": rep
