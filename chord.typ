@@ -155,7 +155,7 @@
 #let chord(
   hidden: false,
   inline: false,
-  auto_spacing: true,
+  auto_spacing: false,
   spacing: 0.3em,
   spacer: none,
   ..content,
@@ -190,14 +190,12 @@
 
 /// Regular chord
 #let c = chord
-/// Chord which doesn't do
-/// automatic spacing to distance itself
-/// from previous chords
-#let d = chord.with(auto_spacing: false)
+/// Chord that does automatic spacing
+#let s = chord.with(auto_spacing: true)
 /// Chord which inserts a dash as a spacer
 /// into the automatic spacing it creates
-#let w = chord.with(spacer: [-])
+#let w = chord.with(spacer: [-], auto_spacing: true)
 /// Chord that is placed inline
 /// with the text
 /// (useful for solo chords, etc.)
-#let i = chord.with(inline: true)
+#let i = chord.with(inline: true, auto_spacing: false)

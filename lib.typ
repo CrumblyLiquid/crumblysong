@@ -102,6 +102,6 @@
 ///
 
 #import "./song.typ": bridge, chorus, prechorus, section, solo, song, verse
-#import "./chord.typ": c, d, i, w
+#import "./chord.typ": c, i, s, w
 #import "./transpose.typ": transpose_state
 #import "./repetition.typ": rep
