@@ -5,8 +5,18 @@
 /// Create colored boxes around
 /// chords and some lyrics
 /// for debugging
-/// -> bool
-#let debug_boxes = false
+/// -> state
+#let debug_boxes = state("debug_boxes", false)
+
+/// Hide chords
+/// -> state
+#let hide_chords = state("hide_chords", false)
+
+/// Hide alternative chords
+/// -> state
+#let hide_alt_chords = state("hide_alt_chords", false)
+
+#let default_style(chord) = text(weight: "bold", chord)
 
 /// Apply special styling to a chord
 ///
@@ -19,20 +29,29 @@
 ///
 /// - chord (content): Chord to be shown
 /// -> content
-#let styled_chord(chord) = [
-  #text(weight: "bold")[
-    #show "#": text(size: 1em, "♯")
-    #show "b": text(size: 1em, "♭")
-    #chord
-  ]<chord>
-]
+#let styled_chord(chord, style, mark) = {
+  if mark [
+    #style[
+      #show "#": text(size: 1em, "♯")
+      #show "b": text(size: 1em, "♭")
+      #chord
+    ]<chord>
+  ] else [
+    #style[
+      #show "#": text(size: 1em, "♯")
+      #show "b": text(size: 1em, "♭")
+      #chord
+    ]<chord-alt>
+  ]
+}
 
+// TODO: `chord_height` is perhaps a bad name
 /// Note: Requires context
-#let chord_height(chord, text, spacing) = {
+#let chord_height(chord, text, spacing, style) = {
   if text == none {
     text = [~]
   }
-  measure(chord).height + measure(text).height + spacing
+  measure(style(chord)).height + measure(text).height + spacing
 }
 
 /// Insert a chord above some specific lyrics
@@ -45,42 +64,93 @@
   chord,
   text,
   spacing,
+  alternative,
+  style,
 ) = context {
   box(
-    stroke: if debug_boxes { gray.transparentize(40%) } else { none },
-    stack(
-      dir: ttb,
-      spacing: spacing + 0.013em,
-      box(
-        stroke: if debug_boxes { green.transparentize(40%) } else { none },
-        styled_chord(chord),
-      ),
-      text,
-    ),
+    stroke: if debug_boxes.get() { gray.transparentize(40%) } else { none },
+    {
+      if alternative {
+        let chord = styled_chord(chord, style, false)
+        let text_width = measure(text).width
+        let chord_width = measure(chord).width
+
+        stack(
+          dir: ttb,
+          place(bottom + start, move(
+            dy: -spacing,
+            box(
+              stroke: if debug_boxes.get() { green.transparentize(40%) } else {
+                none
+              },
+              chord,
+            ),
+          )),
+          box(width: calc.max(text_width, chord_width), text),
+        )
+      } else {
+        stack(
+          dir: ttb,
+          spacing: spacing + 0.013em,
+          box(
+            stroke: if debug_boxes.get() { green.transparentize(40%) } else {
+              none
+            },
+            styled_chord(chord, style, true),
+          ),
+          text,
+        )
+      }
+    },
   )
 }
 
 /// Insert a simple chord that will float above the text
 /// (without association to a specific part of the lyrics)
 ///
-/// - chord (content): Chord content
+/// - chord_text (content): Chord content
 /// - spacing (length): Additional spacing between `chord` and the text below it
+/// - alternative (bool): Float above other content without affecting layout (and line height)
+/// - style (function): Chord styling function
 /// -> content
 #let simple_chord(
-  chord,
+  chord_text,
   spacing,
+  alternative,
+  style,
 ) = context {
-  box(
-    stroke: if debug_boxes { red.transparentize(40%) } else { none },
-    place(
-      start,
-      box(
-        stroke: if debug_boxes { blue.transparentize(40%) } else { none },
-        styled_chord(chord),
+  if alternative {
+    box(
+      stroke: if debug_boxes.get() { red.transparentize(40%) } else { none },
+      place(bottom + start, move(
+        dy: -(measure([~]).height + spacing),
+        box(
+          stroke: if debug_boxes.get() { red.transparentize(40%) } else {
+            none
+          },
+          styled_chord(
+            chord_text,
+            style,
+            false,
+          ),
+        ),
+      )),
+    )
+  } else {
+    box(
+      stroke: if debug_boxes.get() { red.transparentize(40%) } else { none },
+      place(
+        start,
+        box(
+          stroke: if debug_boxes.get() { blue.transparentize(40%) } else {
+            none
+          },
+          styled_chord(chord_text, style, true),
+        ),
       ),
-    ),
-    height: chord_height(chord, [~], spacing),
-  )
+      height: chord_height(chord_text, [~], spacing, style),
+    )
+  }
 }
 
 /// Create a space between text to prevent
@@ -137,7 +207,7 @@
 
   // I'm not really sure why this would be needed...
   box(
-    stroke: if debug_boxes { fuchsia.transparentize(40%) } else { none },
+    stroke: if debug_boxes.get() { fuchsia.transparentize(40%) } else { none },
     width: missing_space + additional_padding,
     align(center + horizon, actual_spacer),
   )
@@ -146,6 +216,7 @@
 /// Create a chord
 ///
 /// - hidden (bool): Hide the chord
+/// - alternative (bool): Float above other content without affecting layout (and line height)
 /// - inline (bool): Place chords inline with the text
 /// - auto_spacing (bool): Leave space for previous chords
 /// - spacing (length):
@@ -154,16 +225,20 @@
 /// -> content
 #let chord(
   hidden: false,
+  alternative: false,
   inline: false,
   auto_spacing: false,
   spacing: 0.3em,
   spacer: none,
+  style: default_style,
   ..content,
 ) = context {
   let chord = content.pos().first()
   let text = content.pos().at(1, default: none)
 
-  if hidden {
+  if (
+    hidden or hide_chords.get() or (alternative and hide_alt_chords.get())
+  ) {
     return text
   }
 
@@ -174,14 +249,14 @@
     text
   } else {
     if auto_spacing == true {
-      let chord_height = chord_height(transposed_chord, text, spacing)
+      let chord_height = chord_height(transposed_chord, text, spacing, style)
       adjust_chord_spacing(chord_height, spacer)
     }
 
     if text == none {
-      simple_chord(transposed_chord, spacing)
+      simple_chord(transposed_chord, spacing, alternative, style)
     } else {
-      stacked_chord(transposed_chord, text, spacing)
+      stacked_chord(transposed_chord, text, spacing, alternative, style)
     }
   }
 }
@@ -199,3 +274,11 @@
 /// with the text
 /// (useful for solo chords, etc.)
 #let i = chord.with(inline: true, auto_spacing: false)
+
+#let alt_style(chord) = text(size: 0.4em, default_style(chord))
+
+#let ca = c.with(alternative: true, spacing: 0.08em, style: alt_style)
+#let sa = s.with(alternative: true, spacing: 0.08em, style: alt_style)
+#let wa = w.with(alternative: true, spacing: 0.08em, style: alt_style)
+#let ia = i.with(alternative: true, spacing: 0.08em, style: alt_style)
+
