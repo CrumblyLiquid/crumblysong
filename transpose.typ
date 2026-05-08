@@ -56,7 +56,7 @@
 #let transpose_part(amount: int, part) = {
   // Separate the root note (C, F#, Bb)
   // from the suffix (mi, 7, maj7)
-  let match = part.match(regex("^([A-G][#b]?)(.*)"))
+  let match = part.match(regex("^([A-H][#b]?)(.*)"))
   if match != none {
     let note = match.captures.at(0)
     let suffix = match.captures.at(1)
