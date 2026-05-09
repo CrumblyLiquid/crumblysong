@@ -25,6 +25,7 @@
 ///
 /// - title (str):
 /// - author (str):
+/// - url (str): Link to an audio or video of the song
 /// - capo (int):
 /// - transpose (int):
 /// - note (content):
@@ -37,6 +38,7 @@
 #let song(
   title: none,
   author: none,
+  url: none,
   capo: 0,
   transpose: 0,
   note: [],
@@ -75,6 +77,46 @@
     hide(capo_text)
   } else { capo_text }
 
+  let left_column = note
+
+  let linked_title = if url != none {
+    link(url, title)
+  } else {
+    title
+  }
+
+  let styled_title = text(size: 1.15em, heading(depth: 2, linked_title))
+  let styled_author = align(center + top, text(
+    weight: "light",
+    style: "italic",
+    size: 0.65em,
+    author,
+  ))
+
+  // Title and author info
+  let center_column = align(center, stack(
+    spacing: 0.55em,
+    styled_title,
+    styled_author,
+  ))
+
+  // Capo and transposition info
+  let right_column = align(horizon + right)[
+    #set text(fill: gray.darken(50%))
+
+    // Aligns the text and numbers
+    // nicely into a table/grid
+    #grid(
+      align: right,
+      rows: 2,
+      row-gutter: 0.40em,
+      columns: 2,
+      column-gutter: 0.25em,
+      capo_text, [#capo],
+      transpose_text, [#transpose_amount_text],
+    )
+  ]
+
   // Header of the song
   // (contains song title, author, capo and transposition information and note)
   block(
@@ -84,36 +126,7 @@
       // Split into 3 columns with the song title in the center
       columns: (1fr, auto, 1fr),
       column-gutter: 1em,
-      // Left column (note)
-      note,
-      // Center column (title and author)
-      align(center, stack(
-        spacing: 0.55em,
-        text(size: 1.15em, heading(depth: 2, title)),
-        align(center + top, text(
-          weight: "light",
-          style: "italic",
-          size: 0.65em,
-        )[
-          #author
-        ]),
-      )),
-      // Right column (capo and transposition)
-      align(horizon + right)[
-        #set text(fill: gray.darken(50%))
-
-        // Aligns the text and numbers
-        // nicely into a table/grid
-        #grid(
-          align: right,
-          rows: 2,
-          row-gutter: 0.40em,
-          columns: 2,
-          column-gutter: 0.25em,
-          capo_text, [#capo],
-          transpose_text, [#transpose_amount_text],
-        )
-      ],
+      left_column, center_column, right_column,
     ),
   )
   // Small space between the header and the song content
