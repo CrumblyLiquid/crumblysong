@@ -278,12 +278,13 @@
 /// (useful for solo chords, etc.)
 #let i = chord.with(inline: true, auto_spacing: false)
 
-#let alt_style(chord) = text(size: 0.4em, default_style(chord))
+#let alt_style(chord) = text(size: 0.4em, chord)
+#let alt_spacing = 0.1em
 
-#let ca = c.with(alternative: true, spacing: 0.08em, style: alt_style)
-#let sa = s.with(alternative: true, spacing: 0.08em, style: alt_style)
-#let wa = w.with(alternative: true, spacing: 0.08em, style: alt_style)
-#let ia = i.with(alternative: true, spacing: 0.08em, style: alt_style)
+#let ca = c.with(alternative: true, spacing: alt_spacing, style: alt_style)
+#let sa = s.with(alternative: true, spacing: alt_spacing, style: alt_style)
+#let wa = w.with(alternative: true, spacing: alt_spacing, style: alt_style)
+#let ia = i.with(alternative: true, spacing: alt_spacing, style: alt_style)
 
 // TODO: Consistent version for optional chords (usually in parentheses)
 
