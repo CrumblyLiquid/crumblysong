@@ -51,7 +51,7 @@
   if text == none {
     text = [~]
   }
-  measure(style(chord)).height + measure(text).height + spacing
+  measure(chord).height + measure(text).height + spacing
 }
 
 /// Insert a chord above some specific lyrics
@@ -250,6 +250,9 @@
   } else {
     if auto_spacing == true {
       let chord_height = chord_height(transposed_chord, text, spacing, style)
+      // TODO: Using style in `chord_height` breaks the spacing function
+      // repr(measure(transposed_chord).height)
+      // repr(measure(style(transposed_chord)).height)
       adjust_chord_spacing(chord_height, spacer)
     }
 
@@ -281,4 +284,6 @@
 #let sa = s.with(alternative: true, spacing: 0.08em, style: alt_style)
 #let wa = w.with(alternative: true, spacing: 0.08em, style: alt_style)
 #let ia = i.with(alternative: true, spacing: 0.08em, style: alt_style)
+
+// TODO: Consistent version for optional chords (usually in parentheses)
 
