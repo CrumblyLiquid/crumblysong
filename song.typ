@@ -79,13 +79,15 @@
 
   let left_column = note
 
+  let title_heading = heading(depth: 2, title)
+
   let linked_title = if url != none {
-    link(url, title)
+    link(url, title_heading)
   } else {
-    title
+    title_heading
   }
 
-  let styled_title = text(size: 1.15em, heading(depth: 2, linked_title))
+  let styled_title = text(size: 1.15em, linked_title)
   let styled_author = align(center + top, text(
     weight: "light",
     style: "italic",
